@@ -1,0 +1,193 @@
+<html>
+
+<head>
+  <title>voice chat with upstage:solar</title>
+</head>
+
+<body>
+  컨셉
+  <br>
+  <textarea id="concept">직업: 학생, 취미: 잠자기</textarea>
+  <br>
+  gpt4o
+  <label class="switch">
+    <input type="checkbox" checked="checked">
+    <span class="slider round"></span>
+  </label>
+  solar
+  <br>
+  <button id="start">시작하기</button>
+  <br>
+  <br>
+  음성 입력
+  <br>
+  <p id="text"></p>
+  <br>
+  음성 출력
+  <br>
+  <p id="result"></p>
+  <br>
+  latency: <span id="latency"></span>
+</body>
+<script>
+  const text = document.getElementById('text');
+  const concept = document.getElementById('concept');
+  const result = document.getElementById('result');
+  const latency = document.getElementById('latency');
+  const startButton = document.getElementById('start');
+  const switchButton = document.querySelector('.switch input');
+
+  let solar = true;
+
+  switchButton.addEventListener('click', (event) => {
+    if (event.target.checked) {
+      if (!solar) {
+        solar = true;
+        console.log('solar');
+      }
+    } else {
+      if (solar) {
+        solar = false;
+        console.log('gpt4o');
+      }
+    }
+  });
+
+  startButton.addEventListener('click', () => {
+    recognition.start();
+  });
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.lang = 'ko-KR';
+  recognition.interimResults = true;
+
+  const SpeechSynthesisUtterance = window.SpeechSynthesisUtterance;
+  const speechSynthesis = window.speechSynthesis;
+  const utterance = new SpeechSynthesisUtterance();
+  utterance.lang = 'ko-KR';
+
+  recognition.onresult = (event) => {
+    const transcript = Array.from(event.results)
+      .map(result => result[0])
+      .map(result => result.transcript)
+      .join('');
+    text.innerText = transcript;
+    if (event.results[0].isFinal) {
+      if (solar) submitTextSolar();
+      else submitTextGpt4o();
+      console.log('final', text.innerText);
+    }
+  };
+
+  recognition.onend = () => {
+    recognition.start();
+  };
+
+  recognition.onerror = (event) => {
+    console.error(event.error);
+  };
+
+  const submitTextSolar = async () => {
+    console.log(concept.value, text.innerText)
+    const startTime = performance.now();
+    const res = await fetch('/text-solar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ concept: concept.value, text: text.innerText }),
+    });
+    const endTime = performance.now();
+    const data = await res.json();
+    latency.innerText = `${Math.round(endTime - startTime)}ms`;
+    result.innerHTML = data.text;
+    utterance.text = data.text;
+    speechSynthesis.speak(utterance);
+  };
+
+  const submitTextGpt4o = async () => {
+    console.log(concept.value, text.innerText)
+    const startTime = performance.now();
+    const res = await fetch('/text-gpt4o', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ concept: concept.value, text: text.innerText }),
+    });
+    const endTime = performance.now();
+    const data = await res.json();
+    latency.innerText = `${Math.round(endTime - startTime)}ms`;
+    result.innerHTML = data.text;
+    utterance.text = data.text;
+    speechSynthesis.speak(utterance);
+  };
+
+</script>
+<style>
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+  }
+
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+
+  input:checked+.slider {
+    background-color: #2196F3;
+  }
+
+  input:focus+.slider {
+    box-shadow: 0 0 1px #2196F3;
+  }
+
+  input:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+  }
+
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 34px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
+  }
+</style>
+
+</html>

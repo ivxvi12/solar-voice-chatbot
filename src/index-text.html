@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <title>voice chat with upstage:solar</title>
+  </head>
+  <body>
+    컨셉
+    <br>
+    <textarea id="concept">직업: 학생, 취미: 잠자기</textarea>
+    <br>
+    <br>
+    입력
+    <br>
+    <input type="text" id="text" autocomplete="off" placeholder="취미가 뭐에요?"/>
+    <br>
+    <button id="submit">submit</button>
+    <p id="result"></p>
+  </body>
+  <script>
+    const text = document.getElementById('text');
+    const concept = document.getElementById('concept');
+    const result = document.getElementById('result');
+    const submitButton = document.getElementById('submit');
+
+    const submitText = async () => {
+      console.log(concept.value, text.value)
+      const res = await fetch('/text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ concept: concept.value ,text: text.value }),
+      });
+      const data = await res.json();
+      result.innerHTML = data.text;
+    };
+
+    text.addEventListener('keydown', e => e.key === 'Enter' && submitText());
+    submitButton.addEventListener('click', submitText);
+
+  </script>
+</html>
