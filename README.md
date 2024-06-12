@@ -1,5 +1,7 @@
 git clone
-npm install
+npm install + install bun
+
+https://bun.sh/docs/installation
 
 .env 에 openai, solar api 키 입력  
 openai: https://platform.openai.com/api-keys  
